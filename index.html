@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <div class="header">
+    <img src="/static/title.png" alt="Crypto Quant" class="logo">
+
+    <div id="last-update" class="last-update">
+      Last update: —
+    </div>
+  </div>
+
+
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .panel {
+      background: #020617;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 6px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 6px 0;
+      border-bottom: 1px solid #1e293b;
+      font-size: 14px;
+    }
+
+    li:last-child {
+      border-bottom: none;
+    }
+
+    .LONG { color: #22c55e; }
+    .SHORT { color: #ef4444; }
+
+    .meta {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .telegram-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #229ED9;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+
+<body>
+
+
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>📈 Current Positions</h2>
+    <ul id="positions">Loading…</ul>
+  </div>
+
+  <div class="panel">
+    <h2>🆕 JOIN Quantum Computing SIGNALS Free - Every Hour </h2>
+    <ul id="new-trades">Loading…</ul>
+
+    <a
+      href="https://t.me/crypto_quant_alert_bot"
+      target="_blank"
+      class="telegram-btn"
+    >
+      🚀 Get Trade Alerts on Telegram
+    </a>
+  </div>
+
+  <div class="panel">
+    <h2>💰 Prices</h2>
+    <ul id="prices">Loading…</ul>
+  </div>
+
+  <div class="panel" style="text-align:center">
+    <h2>☕ Support Free Signals</h2>
+
+    <img
+      src="/static/buymeatea.png"
+      alt="Buy me a coffee"
+      style="width:180px; margin:10px auto; display:block;"
+    />
+
+    <div class="meta">
+      Scan to support the project<br />
+      Free QUBO-based crypto signals
+    </div>
+  </div>
+</div>
+
+<footer>
+  Local machine • Auto-refresh every 60s
+</footer>
+
+<script>
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  return await r.json();
+}
+
+async function refresh() {
+
+  // CURRENT POSITIONS
+  const positions = await fetchJSON("/api/positions") || [];
+  const posEl = document.getElementById("positions");
+
+  posEl.innerHTML = positions.length === 0
+    ? "<li>No active positions</li>"
+    : positions.map(p => `
+        <li class="${p.side}">
+          <strong>${p.asset}</strong>
+          ${p.side}
+          <span class="meta">(${(p.weight * 100).toFixed(1)}%)</span>
+        </li>
+      `).join("");
+
+  // FINAL SELECTED PORTFOLIO
+  const trades = await fetchJSON("/api/selected") || [];
+  const tradeEl = document.getElementById("new-trades");
+
+  tradeEl.innerHTML = trades.length === 0
+    ? "<li>Join Telegram group for free signals using Quantum Computing</li>"
+    : trades.map(t => `
+        <li class="${t.direction}">
+          <strong>${t.asset}</strong>
+          ${t.direction}
+          <span class="meta">
+            | ${t.confidence_tier}
+            | ${t.regime}
+            | conf=${t.confidence.toFixed(2)}
+          </span>
+        </li>
+      `).join("");
+
+  // PRICES
+  const prices = await fetchJSON("/api/prices") || {};
+  const priceEl = document.getElementById("prices");
+
+  priceEl.innerHTML = Object.keys(prices).length === 0
+    ? "<li>—</li>"
+    : Object.entries(prices).map(([asset, price]) => `
+        <li>
+          <strong>${asset}</strong> ${price.toFixed(4)}
+        </li>
+      `).join("");
+
+  // LAST UPDATE
+  document.getElementById("last-update").innerText =
+    new Date().toLocaleTimeString();
+}
+
+document.getElementById("last-update").innerText =
+  "Last update: " + new Date().toLocaleTimeString();
+
+refresh();
+setInterval(refresh, 60_000);
+</script>
+
+</body>
+</html>
